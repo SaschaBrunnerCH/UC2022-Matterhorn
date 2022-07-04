@@ -6,14 +6,27 @@
       name="viewport"
       content="initial-scale=1,maximum-scale=1,user-scalable=no"
     />
-    <title>ArcGIS API for JavaScript Template</title>
+    <title>UC2022 Matterhorn</title>
 
     <link rel="stylesheet" href="/src/general.scss" />
   </head>
   <body>
+    <div id="container">
+      <div id="slopes"><h1 id="title">Slopes</h1></div>
+      <div id="selection">
+        <h1>Change season</h1>
+        <calcite-button id="summer" appearance="outline"
+          >Summer</calcite-button
+        >
+        <calcite-button id="winter" appearance="solid"
+          >Winter</calcite-button
+        >
+      </div>
+    </div>
     <div id="viewDiv">
     </div>
-    <calcite-loader scale="l" id="loader" active></calcite-loader>
+    <calcite-button id="rotateButton">Rotate</calcite-button>
+    
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
