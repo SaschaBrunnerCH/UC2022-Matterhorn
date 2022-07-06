@@ -2,6 +2,8 @@
 
 UC Demo to show the topic of context, adding elevation, different quality modes and weather.
 
+Check it out at: https://daniellaumer.github.io/UC2022-Matterhorn/
+
 To start:
 
 ```
