@@ -1,7 +1,5 @@
 import Color from "@arcgis/core/Color";
-import { whenOnce } from "@arcgis/core/core/reactiveUtils";
 import SceneView from "@arcgis/core/views/SceneView";
-import WebScene from "@arcgis/core/WebScene";
 import Map from "@arcgis/core/Map";
 import "@esri/calcite-components/dist/calcite/calcite.css";
 import "@esri/calcite-components/dist/components/calcite-loader";
@@ -12,8 +10,6 @@ import ElevationProfile from "@arcgis/core/widgets/ElevationProfile";
 import TileLayer from "@arcgis/core/layers/TileLayer";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import SceneLayer from "@arcgis/core/layers/SceneLayer";
-import Feature from "@arcgis/core/widgets/Feature";
-import { DocumentHighlights, HighlightSpan } from "typescript";
 import FillSymbol3DLayer from "@arcgis/core/symbols/FillSymbol3DLayer";
 import PolygonSymbol3D from "@arcgis/core/symbols/PolygonSymbol3D";
 import SimpleRenderer from "@arcgis/core/renderers/SimpleRenderer";
@@ -21,14 +17,19 @@ import MeshSymbol3D from "@arcgis/core/symbols/MeshSymbol3D";
 import ObjectSymbol3DLayer from "@arcgis/core/symbols/ObjectSymbol3DLayer";
 import PointSymbol3D from "@arcgis/core/symbols/PointSymbol3D";
 import UniqueValueRenderer from "@arcgis/core/renderers/UniqueValueRenderer";
-import SizeVariable from "@arcgis/core/renderers/visualVariables/SizeVariable";
 import LineSymbol3D from "@arcgis/core/symbols/LineSymbol3D";
 import LineSymbol3DLayer from "@arcgis/core/symbols/LineSymbol3DLayer";
 import Home from "@arcgis/core/widgets/Home";
 import Basemap from "@arcgis/core/Basemap";
 import PathSymbol3DLayer from "@arcgis/core/symbols/PathSymbol3DLayer";
-
 import LayerView from "@arcgis/core/views/layers/LayerView";
+import SnowyWeather from "@arcgis/core/views/3d/environment/SnowyWeather";
+import CloudyWeather from "@arcgis/core/views/3d/environment/CloudyWeather";
+import Graphic from "@arcgis/core/Graphic";
+import FeatureLayerView from "@arcgis/core/views/layers/FeatureLayerView";
+import Camera from "@arcgis/core/Camera";
+import LineStylePattern3D from "@arcgis/core/symbols/patterns/LineStylePattern3D";
+import Legend from "@arcgis/core/widgets/Legend";
 
 // setAssetPath("https://js.arcgis.com/calcite-components/1.0.0-beta.77/assets");
 
@@ -47,6 +48,10 @@ import LayerView from "@arcgis/core/views/layers/LayerView";
 //   IdentityManager.setOAuthResponseHash(responseHash);
 // };
 
+/***********************************
+ * Load and add all the layers
+ ***********************************/
+
 const map = new Map({
   // Esri world satellite basemap
   basemap: "satellite",
@@ -57,16 +62,39 @@ const map = new Map({
 const railway = new FeatureLayer({
   url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Zermatt_hiking_cable_rail/FeatureServer/0",
   title: "Railway lines",
+  legendEnabled: false,
   elevationInfo: {
     mode: "on-the-ground"
-  }
+  },
+  renderer: new SimpleRenderer({
+    symbol:  new LineSymbol3D({
+      symbolLayers: [
+        new LineSymbol3DLayer({
+          material: { color: [30, 30, 30] },
+          size: "2.7px"
+        }),
+        new LineSymbol3DLayer({
+          material: { color: [240, 240, 240] },
+          size: "1.5px"
+        }),
+        new LineSymbol3DLayer({
+          pattern: new LineStylePattern3D({
+            style: "dash"
+          }),
+          material: { color: [30, 30, 30] },
+          size: "1.5px"
+        })
+      ]
+    })
+  })
 });
 map.add(railway);
 
 
 const cableCars = new FeatureLayer({
   url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Zermatt_hiking_cable_rail/FeatureServer/2",
-  title: "Cable cars ",
+  title: "Cable cars",
+  legendEnabled: false,
   elevationInfo: {
     mode: "absolute-height"
   },
@@ -99,22 +127,6 @@ const slopes = new FeatureLayer({
     field: "difficulty",
     defaultLabel: "Other",
     uniqueValueInfos: [
-      {
-        label: "Beginner",
-        symbol: new LineSymbol3D({
-          symbolLayers: [
-            new LineSymbol3DLayer({
-              material: {
-                color: "#548953",
-              },
-              join: "bevel",
-              cap: "round",
-              size: 1.5
-            }),
-          ],
-        }),
-        value: "beginner",
-      },
       {
         label: "Easy",
         symbol: new LineSymbol3D({
@@ -171,7 +183,59 @@ map.add(slopes);
 const hikingPaths = new FeatureLayer({
   url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Zermatt_hiking_cable_rail/FeatureServer/1",
   title: "Hiking paths",
-  visible: false
+  visible: false, 
+  renderer: new UniqueValueRenderer({
+    field: "difficulty",
+    field2: "theme",
+    fieldDelimiter: ", ",
+    legendOptions: {
+      title: "Hiking paths"
+    },
+    uniqueValueInfos: [
+      {
+        value: "easy, ",
+        symbol: getHikingPathSymbol(
+          "solid",
+          [252, 194, 1]
+        )
+      },
+      {
+        value: "medium, ",
+        symbol: getHikingPathSymbol(
+          "dash",
+          [252, 194, 1]
+        )
+      },
+      {
+        value: "difficult, ",
+        symbol: getHikingPathSymbol(
+          "dot",
+          [252, 194, 1]
+        )
+      },
+      {
+        value: "easy, panoramic",
+        symbol: getHikingPathSymbol(
+          "solid",
+          [250, 59, 32]
+        )
+      },
+      {
+        value: "medium, panoramic",
+        symbol: getHikingPathSymbol(
+          "dash",
+          [250, 59, 32]
+        )
+      },
+      {
+        value: "difficult, panoramic",
+        symbol: getHikingPathSymbol(
+          "dot",
+          [250, 59, 32]
+        )
+      }
+    ]
+  })
 });
 map.add(hikingPaths);
 
@@ -238,6 +302,7 @@ map.add(roofs);
 const trees = new SceneLayer({
   url: "https://services2.arcgis.com/cFEFS0EWrhfDeVw9/arcgis/rest/services/ZermattTreesFinal/SceneServer",
   title: "Trees",
+  legendEnabled: false,
   visible: false,
   renderer: new SimpleRenderer({
     symbol: new PointSymbol3D({
@@ -265,16 +330,16 @@ const hillshade = new TileLayer({
 const view = new SceneView({
   container: "viewDiv",
   map: map,
-  camera:
-  {
-    position: [
-      7.80103763,
-      46.03375606,
-      4264.89987
-    ],
-    heading: 231.57,
-    tilt: 77.49
-  },
+  camera: new Camera(
+    {
+      position: {
+        longitude: 7.80103763,
+        latitude: 46.03375606,
+        z: 4264.89987
+      },
+      heading: 231.57,
+      tilt: 77.49
+    }),
   qualityProfile: "high",
 
   environment: {
@@ -286,8 +351,13 @@ const view = new SceneView({
 });
 
 
+/***********************************
+ * Make a winter basemap
+ ***********************************/
+
 // Remove basemap and set ground color
-view.map.basemap = "none";
+//view.map.basemap = "none";
+view.map.basemap = map.basemap = Basemap.fromId("");
 view.map.ground.surfaceColor = new Color("#d9ecff");
 // Add hillshade layer on top
 view.map.layers.add(hillshade);
@@ -326,16 +396,28 @@ const elevationProfileExpand = new Expand({
 view.ui.add(elevationProfileExpand, "bottom-right");
 view.ui.add(new Home({ view: view }), "top-left")
 
+
+let legend = new Legend({
+  view: view,
+  container: "legend"
+});
+
+
+/***********************************
+ * Functionality to change between summer and winter
+ ***********************************/
+
 let summer = document.getElementById("summer") as HTMLCalciteButtonElement;
 let winter = document.getElementById("winter") as HTMLCalciteButtonElement;
+let slopesContainer = document.getElementById("slopes") as HTMLCalciteButtonElement;
 
 summer.addEventListener("click", () => {
   summer.appearance = "solid";
   winter.appearance = "outline";
 
-  view.environment.weather = { type: 'cloudy', cloudCover: 0.5 },
+  view.environment.weather = new CloudyWeather({ cloudCover: 0.5 });
 
-    slopes.visible = false;
+  slopes.visible = false;
   hikingPaths.visible = true;
   hillshade.visible = false;
   rocks.visible = false;
@@ -343,16 +425,16 @@ summer.addEventListener("click", () => {
 
   map.basemap = Basemap.fromId("satellite")
 
-  document.getElementById("title").innerHTML = "Hiking Paths"
+  slopesContainer.style.visibility = "hidden";
 });
 
 winter.addEventListener("click", () => {
   winter.appearance = "solid";
   summer.appearance = "outline";
 
-  view.environment.weather = { type: 'snowy', cloudCover: 0.14, precipitation: 0.3, snowCover: 'enabled' },
+  view.environment.weather = new SnowyWeather({ cloudCover: 0.14, precipitation: 0.3, snowCover: 'enabled' });
 
-    slopes.visible = true;
+  slopes.visible = true;
   hikingPaths.visible = false;
   hillshade.visible = true;
   rocks.visible = true;
@@ -360,17 +442,47 @@ winter.addEventListener("click", () => {
 
   map.basemap = Basemap.fromId("")
 
-  document.getElementById("title").innerHTML = "Slopes"
+  slopesContainer.style.visibility = "visible";
 
 });
 
-view.when(() => {
+/***********************************
+ * Functionality to rotate
+ ***********************************/
+let rotating = false;
 
-  loadSlopes();
+document.getElementById("rotateButton")?.addEventListener("click", () => {
+  rotating = !rotating;
+  rotate();
 });
+
+view.ui.add("rotateButton", "bottom-left");
+
+
+/***********************************
+ * Functionality to choose different slopes
+ ***********************************/
 
 let highlight: any = null;
 let selectedSlope: string = "";
+
+view.when(() => {
+  loadSlopes();
+});
+
+view.on("click", function (event: any) {
+  view.hitTest(event.screenPoint).then(function (response: any) {
+    var res = response.results[0];
+    // If there was an element clicked and also this element is either part of the traffic or public transport layers
+    if (res && (res.graphic.layer.title == "Ski Slopes" || res.graphic.layer.title == "Cable cars")) {
+      highlightSlope(res.graphic);
+    } else highlightSlope(null);
+  });
+});
+
+/***********************************
+ * Helper functions
+ ***********************************/
 
 function loadSlopes() {
   let slopesContainer = document.getElementById("slopes");
@@ -381,15 +493,14 @@ function loadSlopes() {
   slopes.queryFeatures(query).then((results) => {
     if (results.features.length > 0) {
       let features = results.features;
-      features = features.sort(() => Math.random() - 0.5);
 
       for (let i in features) {
-        if (["Furgg - Furi", "Kuhbodmen", "Weisse Perle", "Matterhorn", "Plan Maison"].includes(features[i].attributes["title"])) {
+        if (["Furgg - Furi", "Kuhbodmen", "Weisse Perle", "Matterhorn panorama", "Plan Maison"].includes(features[i].attributes["title"])) {
           var div = document.createElement("calcite-button");
           div.appearance = "outline";
           div.id = features[i].attributes["ObjectId"];
           div.classList.add("slope");
-  
+
           switch (features[i].attributes["difficulty"]) {
             case "beginner":
               div.classList.add("green");
@@ -406,7 +517,7 @@ function loadSlopes() {
           }
           div.innerHTML = features[i].attributes["title"];
           slopesContainer?.appendChild(div);
-  
+
           div.addEventListener("click", () => {
             view.goTo(features[i].geometry).then(() => {
               //view.popup.viewModel.features = [features[i]];
@@ -415,55 +526,46 @@ function loadSlopes() {
             highlightSlope(features[i]);
           });
         }
-        
+
       }
     }
   });
 }
 
-function highlightSlope(feature: Feature) {
-  if (feature == null || (selectedSlope != "" && selectedSlope == feature.getObjectId())) {
+function highlightSlope(graphic: Graphic | null) {
+  if (graphic == null || (selectedSlope != "" && selectedSlope == graphic.attributes["ObjectId"])) {
     if (highlight) {
       highlight.remove();
     }
-    elevationProfile.viewModel.input = null;
+    elevationProfile.viewModel.input = new Graphic();
     elevationProfileExpand.expanded = false;
-    (document.getElementById(selectedSlope) as HTMLCalciteButtonElement).appearance = "outline";
+    if (document.getElementById(selectedSlope)) {
+      (document.getElementById(selectedSlope) as HTMLCalciteButtonElement).appearance = "outline";
+    }
     selectedSlope = "";
     view.popup.close();
   } else {
-    view.whenLayerView(feature.layer).then((layerView:LayerView) => {
+    view.whenLayerView(graphic.layer).then((layerView: LayerView) => {
       if (highlight) {
         highlight.remove();
       }
-      highlight = layerView.highlight([feature.getObjectId()]);
+      highlight = (layerView as FeatureLayerView).highlight([graphic.attributes["ObjectId"]]);
     });
 
-    elevationProfile.viewModel.input = feature;
+    elevationProfile.viewModel.input = graphic;
     elevationProfileExpand.expanded = true;
 
-    if (selectedSlope != "") {
+    if (document.getElementById(selectedSlope) && selectedSlope != "") {
       (document.getElementById(selectedSlope) as HTMLCalciteButtonElement).appearance = "outline";
     }
+    selectedSlope = graphic.attributes["ObjectId"];
 
-    selectedSlope = feature.getObjectId();
-    console.log(selectedSlope);
-    (document.getElementById(selectedSlope) as HTMLCalciteButtonElement).appearance = "solid";
+    if (document.getElementById(selectedSlope)) {
+      (document.getElementById(selectedSlope) as HTMLCalciteButtonElement).appearance = "solid";
+    }
+
   }
 }
-
-view.on("click", function (event:any) {
-  view.hitTest(event.screenPoint).then(function (response:any) {
-    var res = response.results[0];
-    // If there was an element clicked and also this element is either part of the traffic or public transport layers
-    if (res && res.graphic.layer.title == "Ski Slopes") {
-      highlightSlope(res.graphic);
-    } else highlightSlope(null);
-  });
-});
-
-
-let rotating = false;
 
 function rotate() {
   if (rotating && !view.interacting) {
@@ -478,11 +580,32 @@ function rotate() {
   }
 }
 
-document.getElementById("rotateButton")?.addEventListener("click", () => {
-  rotating = !rotating;
-  rotate();
-});
+function getHikingPathSymbol(patternStyle:any, color:[number, number, number]) {
+  // Each line is rendered with two symbol layers: an opaque line and a semi-transparent background of the same color underneath it.
+  const patternColor = new Color(color);
+  const backgroundColor = new Color(color);
+  // Adding an alpha value to make the background transparent.
+  backgroundColor.a = 0.2;
 
-view.ui.add("rotateButton", "bottom-left");
+  return new LineSymbol3D({
+    symbolLayers: [
+      new LineSymbol3DLayer({
+        // If no pattern is specified, line is rendered as solid.
+        material: { color: backgroundColor },
+        size: patternStyle === "dot" ? "3px" : "2px"
+      }),
+      new LineSymbol3DLayer({
+        pattern: new LineStylePattern3D({
+          // Using pattern to mark difficulty
+          style: patternStyle
+        }),
+        cap: "round",
+        join: "round",
+        material: { color: patternColor },
+        size: patternStyle === "dot" ? "3px" : "1.6px"
+      })
+    ]
+  });
+}
 
 window["view"] = view;
