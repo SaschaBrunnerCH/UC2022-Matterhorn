@@ -10,7 +10,7 @@ body {
 }
 
 #viewDiv {
-  width: 80%;
+  width: 100%;
   height: 100%;
 }
 
@@ -25,6 +25,14 @@ body {
   width: 100%;
   height: 40%;
   overflow: auto;
+}
+
+.container {
+  display: flex;
+  flex-direction: row;
+  background-color: white;
+  justify-content: center;
+  padding: 10px;
 }
 
 #selection {
@@ -71,7 +79,12 @@ body {
 
 
 
-calcite-button {
+#selection calcite-button {
   width: 90%;
   margin: 5px;
+}
+
+.container calcite-button {
+  width: 100%;
+  margin: 5px 0;
 }

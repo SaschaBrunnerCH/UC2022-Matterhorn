@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="/src/general.scss" />
   </head>
   <body>
-    <div id="container">
+    <div id="container" style="display:none">
       <div id="slopes">
         <h1 id="title">Slopes</h1>
       </div>
@@ -27,10 +27,23 @@
           >Winter</calcite-button
         >
       </div>
+      <calcite-button id="rotateButton">Rotate</calcite-button>
+
+      <div id="blendModeButtons" class="container" style="display:none">
+        <calcite-button id="background">Background</calcite-button>
+        <calcite-button id="hillshade">Hillshade</calcite-button>
+        <calcite-button id="blendMode">Blend Mode</calcite-button>
+      </div>
+
+      <div id="qualityButtons"  class="container" style="display:none">
+        <calcite-button id="quality">Quality</calcite-button>
+        <calcite-button id="performance">Performance</calcite-button>
+      </div>
+
+
     </div>
     <div id="viewDiv">
     </div>
-    <calcite-button id="rotateButton">Rotate</calcite-button>
     
     <script type="module" src="/src/main.ts"></script>
   </body>

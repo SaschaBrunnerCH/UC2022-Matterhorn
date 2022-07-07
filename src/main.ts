@@ -2,7 +2,7 @@ import Color from "@arcgis/core/Color";
 import SceneView from "@arcgis/core/views/SceneView";
 import Map from "@arcgis/core/Map";
 import "@esri/calcite-components/dist/calcite/calcite.css";
-import "@esri/calcite-components/dist/components/calcite-loader";
+import "@esri/calcite-components/dist/components/calcite-button";
 import Expand from "@arcgis/core/widgets/Expand";
 import Weather from "@arcgis/core/widgets/Weather";
 import Daylight from "@arcgis/core/widgets/Daylight";
@@ -33,34 +33,159 @@ import Legend from "@arcgis/core/widgets/Legend";
 import ElevationProfileLineInput from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineInput";
 import ElevationProfileLineGround from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineGround";
 
-// setAssetPath("https://js.arcgis.com/calcite-components/1.0.0-beta.77/assets");
-
-// const params = new URLSearchParams(document.location.search.slice(1));
-// const someParam = params.has("someParam");
-
-// IdentityManager.registerOAuthInfos([
-//   new OAuthInfo({
-//     appId: "",
-//     popup: true,
-//     popupCallbackUrl: `${document.location.origin}${document.location.pathname}oauth-callback-api.html`,
-//   }),
-// ]);
-
-// (window as any).setOAuthResponseHash = (responseHash: string) => {
-//   IdentityManager.setOAuthResponseHash(responseHash);
-// };
-
-/***********************************
- * Load and add all the layers
- ***********************************/
 
 const map = new Map({
   // Esri world satellite basemap
   basemap: "satellite",
   // Esri world elevation service
-  ground: "world-elevation"
+  //ground: "world-elevation"
 });
 
+
+const view = new SceneView({
+  container: "viewDiv",
+  map: map,
+  camera: new Camera(
+    {
+      position: {
+        longitude: 7.80103763,
+        latitude: 46.03375606,
+        z: 4264.89987
+      },
+      heading: 231.57,
+      tilt: 77.49
+    }),
+
+});
+
+
+
+//* ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//***********************************
+//* Functionality to rotate
+//***********************************
+function rotate() {
+  if (rotating && !view.interacting) {
+    view.goTo(
+      {
+        heading: view.camera.heading + 0.2,
+        center: view.center
+      },
+      { animate: false }
+    );
+    requestAnimationFrame(rotate);
+  }
+}
+
+let rotating = false;
+
+document.getElementById("rotateButton")?.addEventListener("click", () => {
+  rotating = !rotating;
+  rotate();
+});
+view.ui.add("rotateButton", "bottom-left");
+
+//* ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//***********************************
+//* Blend modes
+//***********************************
+
+document.getElementById("blendModeButtons")!.style.display = "block";
+view.ui.add("blendModeButtons", "bottom-right");
+// Load hillshade layer
+const hillshade = new TileLayer({
+  url: "https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer",
+  title: "Hillshade",
+  legendEnabled: false,
+  listMode: "hide",
+  visible: false
+});
+view.map.layers.add(hillshade);
+
+
+document.getElementById("background")?.addEventListener("click", () => {
+  view.map.basemap = map.basemap = Basemap.fromId("");
+  view.map.ground.surfaceColor = new Color("#d9ecff");
+  hillshade.visible = false;
+})
+document.getElementById("hillshade")?.addEventListener("click", () => {
+  hillshade.visible = true;
+  hillshade.blendMode = "normal";
+})
+document.getElementById("blendMode")?.addEventListener("click", () => {
+  hillshade.visible = true;
+  hillshade.blendMode = "luminosity";
+})
+
+//* ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// Remove basemap and set ground color
+//view.map.basemap = "none";
+view.map.basemap = map.basemap = Basemap.fromId("");
+view.map.ground.surfaceColor = new Color("#d9ecff");
+// Add hillshade layer on top
+hillshade.visible = true;
+// Blend the hillshade layer with the background
+hillshade.blendMode = "luminosity";
+
+document.getElementById("blendModeButtons")!.style.display = "none";
+view.ui.remove("blendModeButtons");
+
+
+//***********************************
+//* Effects and level of detail
+//***********************************
+
+document.getElementById("qualityButtons")!.style.display = "block";
+view.ui.add("qualityButtons", "bottom-right");
+
+document.getElementById("quality")?.addEventListener("click", () => {
+  view.qualityProfile = "high";
+  view.environment.atmosphere!.quality = "high";
+  view.environment.lighting!.directShadowsEnabled = true;
+})
+
+document.getElementById("performance")?.addEventListener("click", () => {
+  view.qualityProfile = "low";
+  view.environment.atmosphere!.quality = "low";
+  view.environment.lighting!.directShadowsEnabled = false;
+
+})
+
+//* ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+view.environment.weather = new SnowyWeather({ cloudCover: 0.2, precipitation: 0.3 })
+
+//* ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+document.getElementById("qualityButtons")!.style.display = "none";
+view.ui.remove("qualityButtons");
+
+//***********************************
+//* Use terrain for analysis
+//***********************************
+const elevationProfile = new ElevationProfile({ 
+  view: view,
+  profiles: [
+    new ElevationProfileLineGround(),
+    new ElevationProfileLineInput()
+  ]
+ });
+
+view.ui.add(elevationProfile, "bottom-right");
+
+//* ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//***********************************
+//* Add more data
+//***********************************
 const railway = new FeatureLayer({
   url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Zermatt_hiking_cable_rail/FeatureServer/0",
   title: "Railway lines",
@@ -330,56 +455,12 @@ const trees = new SceneLayer({
 });
 map.add(trees);
 
-const hillshade = new TileLayer({
-  url: "https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer",
-  title: "Hillshade",
-  legendEnabled: false,
-  listMode: "hide"
-});
+//* ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
-const view = new SceneView({
-  container: "viewDiv",
-  map: map,
-  camera: new Camera(
-    {
-      position: {
-        longitude: 7.80103763,
-        latitude: 46.03375606,
-        z: 4264.89987
-      },
-      heading: 231.57,
-      tilt: 77.49
-    }),
-  qualityProfile: "high",
-
-  environment: {
-    weather: { type: 'snowy', cloudCover: 0.14, precipitation: 0.3, snowCover: 'disabled' },
-    atmosphere: {
-      quality: "high"
-    }
-  }
-});
-
-
-/***********************************
- * Make a winter basemap
- ***********************************/
-
-// Remove basemap and set ground color
-//view.map.basemap = "none";
-view.map.basemap = map.basemap = Basemap.fromId("");
-view.map.ground.surfaceColor = new Color("#d9ecff");
-// Add hillshade layer on top
-view.map.layers.add(hillshade);
-// Blend the hillshade layer with the background
-hillshade.blendMode = "luminosity";
-
-
-/***********************************
- * Add the widgets' UI elements to the view
- ***********************************/
+//***********************************
+//* Add the widgets' UI elements to the view
+//***********************************
 const weatherExpand = new Expand({
   view: view,
   content: new Weather({
@@ -398,18 +479,11 @@ const daylightExpand = new Expand({
 });
 view.ui.add([weatherExpand, daylightExpand], "top-right");
 
-const elevationProfile = new ElevationProfile({ 
-  view: view,
-  profiles: [
-    new ElevationProfileLineGround(),
-    new ElevationProfileLineInput()
-  ] });
-  console.log()
+view.ui.remove(elevationProfile);
 const elevationProfileExpand = new Expand({
   view: view,
   content: elevationProfile,
   expanded: false,
-  
 });
 
 view.ui.add(elevationProfileExpand, "bottom-right");
@@ -422,9 +496,9 @@ let legend = new Legend({
 });
 
 
-/***********************************
- * Functionality to change between summer and winter
- ***********************************/
+//***********************************
+//* Functionality to change between summer and winter
+//***********************************
 
 let summer = document.getElementById("summer") as HTMLCalciteButtonElement;
 let winter = document.getElementById("winter") as HTMLCalciteButtonElement;
@@ -465,29 +539,14 @@ winter.addEventListener("click", () => {
 
 });
 
-/***********************************
- * Functionality to rotate
- ***********************************/
-let rotating = false;
-
-document.getElementById("rotateButton")?.addEventListener("click", () => {
-  rotating = !rotating;
-  rotate();
-});
-
-view.ui.add("rotateButton", "bottom-left");
-
-
-/***********************************
- * Functionality to choose different slopes
- ***********************************/
+//***********************************
+//* Functionality to choose different slopes
+//***********************************
+document.getElementById("container")!.style.display = "block";
+document.getElementById("viewDiv")!.style.width = "80%";
 
 let highlight: any = null;
 let selectedSlope: string = "";
-
-
-
-
 
 view.when(() => {
 
@@ -503,7 +562,6 @@ let slopesNames = [
   "Glacier Run",
   "Valley Slope",
   "Matterhorn Panorama",
-
   "Express Track",
 ]
 
@@ -572,9 +630,9 @@ view.on("click", function (event: any) {
   });
 });
 
-/***********************************
- * Helper functions
- ***********************************/
+//***********************************
+//* Helper functions
+//***********************************
 
 function highlightSlope(graphic: Graphic | null) {
   if (graphic == null || (selectedSlope != "" && selectedSlope == graphic.attributes["ObjectId"])) {
@@ -611,20 +669,10 @@ function highlightSlope(graphic: Graphic | null) {
   }
 }
 
-function rotate() {
-  if (rotating && !view.interacting) {
-    view.goTo(
-      {
-        heading: view.camera.heading + 0.2,
-        center: view.center
-      },
-      { animate: false }
-    );
-    requestAnimationFrame(rotate);
-  }
-}
 
-function getHikingPathSymbol(patternStyle:any, color:[number, number, number]) {
+//*////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function getHikingPathSymbol(patternStyle: any, color: [number, number, number]) {
   // Each line is rendered with two symbol layers: an opaque line and a semi-transparent background of the same color underneath it.
   const patternColor = new Color(color);
   const backgroundColor = new Color(color);
