@@ -33,22 +33,6 @@ import Legend from "@arcgis/core/widgets/Legend";
 import ElevationProfileLineInput from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineInput";
 import ElevationProfileLineGround from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineGround";
 
-// setAssetPath("https://js.arcgis.com/calcite-components/1.0.0-beta.77/assets");
-
-// const params = new URLSearchParams(document.location.search.slice(1));
-// const someParam = params.has("someParam");
-
-// IdentityManager.registerOAuthInfos([
-//   new OAuthInfo({
-//     appId: "",
-//     popup: true,
-//     popupCallbackUrl: `${document.location.origin}${document.location.pathname}oauth-callback-api.html`,
-//   }),
-// ]);
-
-// (window as any).setOAuthResponseHash = (responseHash: string) => {
-//   IdentityManager.setOAuthResponseHash(responseHash);
-// };
 
 /***********************************
  * Load and add all the layers
@@ -368,11 +352,12 @@ const view = new SceneView({
  ***********************************/
 
 // Remove basemap and set ground color
-//view.map.basemap = "none";
 view.map.basemap = map.basemap = Basemap.fromId("");
 view.map.ground.surfaceColor = new Color("#d9ecff");
+
 // Add hillshade layer on top
 view.map.layers.add(hillshade);
+
 // Blend the hillshade layer with the background
 hillshade.blendMode = "luminosity";
 
@@ -416,7 +401,7 @@ view.ui.add(elevationProfileExpand, "bottom-right");
 view.ui.add(new Home({ view: view }), "top-left")
 
 
-let legend = new Legend({
+new Legend({
   view: view,
   container: "legend"
 });
@@ -425,7 +410,6 @@ let legend = new Legend({
 /***********************************
  * Functionality to change between summer and winter
  ***********************************/
-
 let summer = document.getElementById("summer") as HTMLCalciteButtonElement;
 let winter = document.getElementById("winter") as HTMLCalciteButtonElement;
 let slopesContainer = document.getElementById("slopes") as HTMLCalciteButtonElement;
@@ -484,10 +468,6 @@ view.ui.add("rotateButton", "bottom-left");
 
 let highlight: any = null;
 let selectedSlope: string = "";
-
-
-
-
 
 view.when(() => {
 
@@ -607,7 +587,6 @@ function highlightSlope(graphic: Graphic | null) {
     if (document.getElementById(selectedSlope)) {
       (document.getElementById(selectedSlope) as HTMLCalciteButtonElement).appearance = "solid";
     }
-
   }
 }
 

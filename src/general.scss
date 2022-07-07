@@ -75,3 +75,7 @@ calcite-button {
   width: 90%;
   margin: 5px;
 }
+
+.esri-view-surface::after {
+  outline: none !important;
+}
