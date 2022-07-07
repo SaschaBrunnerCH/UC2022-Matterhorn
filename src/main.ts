@@ -38,7 +38,7 @@ const map = new Map({
   // Esri world satellite basemap
   basemap: "satellite",
   // Esri world elevation service
-  //ground: "world-elevation"
+  ground: "world-elevation"
 });
 
 
