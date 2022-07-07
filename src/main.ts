@@ -30,6 +30,8 @@ import FeatureLayerView from "@arcgis/core/views/layers/FeatureLayerView";
 import Camera from "@arcgis/core/Camera";
 import LineStylePattern3D from "@arcgis/core/symbols/patterns/LineStylePattern3D";
 import Legend from "@arcgis/core/widgets/Legend";
+import ElevationProfileLineInput from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineInput";
+import ElevationProfileLineGround from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineGround";
 
 // setAssetPath("https://js.arcgis.com/calcite-components/1.0.0-beta.77/assets");
 
@@ -109,6 +111,13 @@ const cableCars = new FeatureLayer({
           width: 5,
           height: 5
 
+        }),
+        new LineSymbol3DLayer({
+          material: {
+            color: [77, 77, 77],
+          },
+          join: "bevel",
+          size: 3,
         })]
     })
   })
@@ -173,7 +182,7 @@ const slopes = new FeatureLayer({
             }),
           ],
         }),
-        value: "difficult",
+        value: "hard",
       },
     ],
   })
@@ -184,6 +193,9 @@ const hikingPaths = new FeatureLayer({
   url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Zermatt_hiking_cable_rail/FeatureServer/1",
   title: "Hiking paths",
   visible: false, 
+  elevationInfo: {
+    mode: "on-the-ground"
+  },
   renderer: new UniqueValueRenderer({
     field: "difficulty",
     field2: "theme",
@@ -343,7 +355,7 @@ const view = new SceneView({
   qualityProfile: "high",
 
   environment: {
-    weather: { type: 'snowy', cloudCover: 0.14, precipitation: 0.3, snowCover: 'enabled' },
+    weather: { type: 'snowy', cloudCover: 0.14, precipitation: 0.3, snowCover: 'disabled' },
     atmosphere: {
       quality: "high"
     }
@@ -386,11 +398,18 @@ const daylightExpand = new Expand({
 });
 view.ui.add([weatherExpand, daylightExpand], "top-right");
 
-const elevationProfile = new ElevationProfile({ view: view });
+const elevationProfile = new ElevationProfile({ 
+  view: view,
+  profiles: [
+    new ElevationProfileLineGround(),
+    new ElevationProfileLineInput()
+  ] });
+  console.log()
 const elevationProfileExpand = new Expand({
   view: view,
   content: elevationProfile,
-  expanded: false
+  expanded: false,
+  
 });
 
 view.ui.add(elevationProfileExpand, "bottom-right");
@@ -466,71 +485,96 @@ view.ui.add("rotateButton", "bottom-left");
 let highlight: any = null;
 let selectedSlope: string = "";
 
+
+
+
+
 view.when(() => {
-  loadSlopes();
+
+  let slopesList = [
+    "Kuhbodmen",
+    "Gandegg",
+    "Weisse Perle",
+    "Matterhorn panorama",
+    "Furgg - Furi",
+];
+let slopesNames = [
+  "Easy Rider",
+  "Glacier Run",
+  "Valley Slope",
+  "Matterhorn Panorama",
+
+  "Express Track",
+]
+
+for (let i = 0; i<slopesList.length;i++) {
+  var query = slopes.createQuery();
+  query.where = "title = '" + slopesList[i]+ "'"
+  console.log(query.where)
+
+  slopes.queryFeatures(query).then((results) => {
+    if (results.features.length > 0) {
+      let feature = results.features[0];
+
+    var div = document.createElement("calcite-button");
+    div.appearance = "outline";
+    div.id = feature.getObjectId().toString();
+    div.classList.add("slope");
+
+    switch (feature.attributes["difficulty"]) {
+      case "easy":
+        div.classList.add("blue");
+        break;
+      case "medium":
+        div.classList.add("red");
+        break;
+      case "hard":
+        div.classList.add("black");
+        break;
+    }
+    div.innerHTML = slopesNames[i];
+    slopesContainer?.appendChild(div);
+
+    div.addEventListener("click", () => {
+      view.goTo(feature.geometry).then(() => {
+        //view.popup.viewModel.features = [feature];
+        //view.popup.open();
+      });
+      (elevationProfile.profiles as any) = [
+        new ElevationProfileLineGround(),
+      ];
+      highlightSlope(feature);
+    });
+    }
+    })
+  
+  }
 });
 
 view.on("click", function (event: any) {
   view.hitTest(event.screenPoint).then(function (response: any) {
     var res = response.results[0];
     // If there was an element clicked and also this element is either part of the traffic or public transport layers
-    if (res && (res.graphic.layer.title == "Ski Slopes" || res.graphic.layer.title == "Cable cars")) {
+    if (res && (res.graphic.layer.title == "Ski Slopes" || res.graphic.layer.title == "Hiking paths")) {
+      (elevationProfile.profiles as any) = [
+        new ElevationProfileLineGround(),
+      ];
       highlightSlope(res.graphic);
-    } else highlightSlope(null);
+    }
+    else if (res && (res.graphic.layer.title == "Cable cars")) {
+      (elevationProfile.profiles as any) = [
+        new ElevationProfileLineGround(),
+        new ElevationProfileLineInput()
+      ];
+      highlightSlope(res.graphic);
+    } 
+    else highlightSlope(null);
   });
 });
 
 /***********************************
  * Helper functions
  ***********************************/
-
-function loadSlopes() {
-  let slopesContainer = document.getElementById("slopes");
-
-  // Create empty query, means to take all rows!
-  var query = slopes.createQuery();
-
-  slopes.queryFeatures(query).then((results) => {
-    if (results.features.length > 0) {
-      let features = results.features;
-
-      for (let i in features) {
-        if (["Furgg - Furi", "Kuhbodmen", "Weisse Perle", "Matterhorn panorama", "Plan Maison"].includes(features[i].attributes["title"])) {
-          var div = document.createElement("calcite-button");
-          div.appearance = "outline";
-          div.id = features[i].attributes["ObjectId"];
-          div.classList.add("slope");
-
-          switch (features[i].attributes["difficulty"]) {
-            case "beginner":
-              div.classList.add("green");
-              break;
-            case "easy":
-              div.classList.add("blue");
-              break;
-            case "medium":
-              div.classList.add("red");
-              break;
-            case "hard":
-              div.classList.add("black");
-              break;
-          }
-          div.innerHTML = features[i].attributes["title"];
-          slopesContainer?.appendChild(div);
-
-          div.addEventListener("click", () => {
-            view.goTo(features[i].geometry).then(() => {
-              //view.popup.viewModel.features = [features[i]];
-              //view.popup.open();
-            });
-            highlightSlope(features[i]);
-          });
-        }
-
-      }
-    }
-  });
-}
 
 function highlightSlope(graphic: Graphic | null) {
   if (graphic == null || (selectedSlope != "" && selectedSlope == graphic.attributes["ObjectId"])) {
