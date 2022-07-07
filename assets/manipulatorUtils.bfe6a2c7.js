@@ -1,1 +1,0 @@
-import{I as m,mv as s,F as r}from"./vendor.508dc62e.js";function l(e,t=s(e)){return t.mode!=="on-the-ground"&&!(m(e.geometry)||!e.geometry.hasZ)}function i(e,t){let n=null;const a=e.events.on("grab-changed",o=>{r(n)&&(n.remove(),n=null),o.action==="start"&&(n=e.disableDisplay()),t&&t(o)});return{remove(){r(n)&&n.remove(),a.remove()}}}export{i as n,l as t};

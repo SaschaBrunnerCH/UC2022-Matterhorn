@@ -1,0 +1,1 @@
+import{M as o,bE as r,ak as s,al as a}from"./vendor.fe24faac.js";const b={getObjectId:t=>t.objectId,getAttributes:t=>t.attributes,getAttribute:(t,e)=>t.attributes[e],cloneWithGeometry:(t,e)=>new a(e,t.attributes,null,t.objectId),getGeometry:t=>t.geometry,getCentroid:(t,e)=>(o(t.centroid)&&(t.centroid=r(new s,t.geometry,e.hasZ,e.hasM)),t.centroid)};export{b as i};
