@@ -33,7 +33,249 @@ import Legend from "@arcgis/core/widgets/Legend";
 import ElevationProfileLineInput from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineInput";
 import ElevationProfileLineGround from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineGround";
 
+let rendererCableCar = new SimpleRenderer({
+  symbol: new LineSymbol3D({
+    symbolLayers: [
+      new PathSymbol3DLayer({
+        material: {
+          color: [77, 77, 77],
+        },
+        join: "bevel",
+        width: 5,
+        height: 5
 
+      }),
+      new LineSymbol3DLayer({
+        material: {
+          color: [77, 77, 77],
+        },
+        join: "bevel",
+        size: 3,
+      })]
+  })
+});
+
+let rendererHikingPaths = new UniqueValueRenderer({
+  field: "difficulty",
+  field2: "theme",
+  fieldDelimiter: ", ",
+  legendOptions: {
+    title: "Hiking paths"
+  },
+  uniqueValueInfos: [
+    {
+      value: "easy, ",
+      symbol: getHikingPathSymbol(
+        "solid",
+        [252, 194, 1]
+      )
+    },
+    {
+      value: "medium, ",
+      symbol: getHikingPathSymbol(
+        "dash",
+        [252, 194, 1]
+      )
+    },
+    {
+      value: "difficult, ",
+      symbol: getHikingPathSymbol(
+        "dot",
+        [252, 194, 1]
+      )
+    },
+    {
+      value: "easy, panoramic",
+      symbol: getHikingPathSymbol(
+        "solid",
+        [250, 59, 32]
+      )
+    },
+    {
+      value: "medium, panoramic",
+      symbol: getHikingPathSymbol(
+        "dash",
+        [250, 59, 32]
+      )
+    },
+    {
+      value: "difficult, panoramic",
+      symbol: getHikingPathSymbol(
+        "dot",
+        [250, 59, 32]
+      )
+    }
+  ]
+})
+
+let rendererSlopes = new UniqueValueRenderer({
+
+  field: "difficulty",
+  defaultLabel: "Other",
+  uniqueValueInfos: [
+    {
+      label: "Easy",
+      symbol: new LineSymbol3D({
+        symbolLayers: [
+          new LineSymbol3DLayer({
+            material: {
+              color: "#007ac2",
+            },
+            join: "bevel",
+            cap: "round",
+            size: 1.5
+          }),
+        ],
+      }),
+      value: "easy",
+    },
+    {
+      label: "Medium",
+      symbol: new LineSymbol3D({
+        symbolLayers: [
+          new LineSymbol3DLayer({
+            material: {
+              color: "#d90012",
+            },
+            join: "bevel",
+            cap: "round",
+            size: 1.5
+          }),
+        ],
+      }),
+      value: "medium",
+    },
+    {
+      label: "Difficult",
+      symbol: new LineSymbol3D({
+        symbolLayers: [
+          new LineSymbol3DLayer({
+            material: {
+              color: [0, 0, 0],
+            },
+            join: "bevel",
+            cap: "round",
+            size: 1.5
+          }),
+        ],
+      }),
+      value: "hard",
+    },
+  ],
+})
+
+//***********************************
+//* Add more data
+//***********************************
+
+const railway = new FeatureLayer({
+  url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Zermatt_hiking_cable_rail/FeatureServer/0",
+  title: "Railway lines",
+  legendEnabled: false,
+  elevationInfo: {
+    mode: "on-the-ground"
+  },
+  renderer: new SimpleRenderer({
+    symbol: new LineSymbol3D({
+      symbolLayers: [
+        new LineSymbol3DLayer({
+          material: { color: [30, 30, 30] },
+          size: "2.7px"
+        }),
+        new LineSymbol3DLayer({
+          material: { color: [240, 240, 240] },
+          size: "1.5px"
+        }),
+        new LineSymbol3DLayer({
+          pattern: new LineStylePattern3D({
+            style: "dash"
+          }),
+          material: { color: [30, 30, 30] },
+          size: "1.5px"
+        })
+      ]
+    })
+  })
+});
+
+
+const rocks = new FeatureLayer({
+  url: "https://services2.arcgis.com/cFEFS0EWrhfDeVw9/arcgis/rest/services/Zermatt_Rocks/FeatureServer",
+  title: "Rocks",
+  legendEnabled: false,
+  listMode: "hide",
+  elevationInfo: {
+    mode: "on-the-ground"
+  },
+  renderer: new SimpleRenderer({
+    symbol: new PolygonSymbol3D({
+      symbolLayers: [
+        new FillSymbol3DLayer({
+          material: {
+            color: [43, 43, 43, 0.36],
+            colorMixMode: "replace"
+          }
+        })]
+    })
+  })
+});
+
+
+const buildings = new SceneLayer({
+  url: "https://services2.arcgis.com/cFEFS0EWrhfDeVw9/arcgis/rest/services/Buildings_Zermatt/SceneServer",
+  title: "Buildings",
+  legendEnabled: false,
+  listMode: "hide",
+  renderer: new SimpleRenderer({
+    symbol: new MeshSymbol3D({
+      symbolLayers: [
+        new FillSymbol3DLayer({
+          material: {
+            color: [194, 159, 99],
+            colorMixMode: "tint"
+          }
+        })]
+    })
+  })
+});
+
+
+const roofs = new SceneLayer({
+  url: "https://services2.arcgis.com/cFEFS0EWrhfDeVw9/arcgis/rest/services/Building_Roofs_Zermatt/SceneServer",
+  title: "Roofs",
+  legendEnabled: false,
+  listMode: "hide",
+  renderer: new SimpleRenderer({
+    symbol: new MeshSymbol3D({
+      symbolLayers: [
+        new FillSymbol3DLayer({
+          material: {
+            color: [115, 76, 0],
+            colorMixMode: "tint"
+          }
+        })]
+    })
+  })
+});
+
+
+const trees = new SceneLayer({
+  url: "https://services2.arcgis.com/cFEFS0EWrhfDeVw9/arcgis/rest/services/ZermattTreesFinal/SceneServer",
+  title: "Trees",
+  legendEnabled: false,
+  visible: false,
+  renderer: new SimpleRenderer({
+    symbol: new PointSymbol3D({
+      symbolLayers: [
+        new ObjectSymbol3DLayer({
+          resource: {
+            href: "https://static.arcgis.com/arcgis/styleItems/RealisticTrees/gltf/resource/LarixDecidua.glb"
+          },
+          height: 30
+        })]
+    })
+  })
+});
 
 
 
@@ -89,10 +331,50 @@ function rotate() {
 
 //addRotateButton()
 
+//***********************************
+//* Step 2: Adding data
+//***********************************
 
+const hikingPaths = new FeatureLayer({
+  url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Zermatt_hiking_cable_rail/FeatureServer/1",
+  title: "Hiking paths",
+  elevationInfo: {
+    mode: "on-the-ground"
+  },
+  renderer: rendererHikingPaths,
+  visible: false
+});
+map.add(hikingPaths);
+
+const slopes = new FeatureLayer({
+  url: "https://services2.arcgis.com/cFEFS0EWrhfDeVw9/arcgis/rest/services/Ski%20Slopes%20Zermatt/FeatureServer",
+  title: "Ski Slopes",
+  elevationInfo: {
+    mode: "on-the-ground"
+  },
+  renderer: rendererSlopes,
+  visible: false
+});
+map.add(slopes);
+
+const cableCars = new FeatureLayer({
+  url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Zermatt_hiking_cable_rail/FeatureServer/2",
+  title: "Cable cars",
+  legendEnabled: false,
+  elevationInfo: {
+    mode: "absolute-height"
+  },
+  renderer: rendererCableCar,
+  visible: false
+});
+map.add(cableCars);
+
+//cableCars.visible = true;
+//hikingPaths.visible = true;
+//slopes.visible = true;
 
 //***********************************
-//* Step 2: Blend modes
+//* Step 3: Blend modes
 //***********************************
 
 // Load hillshade layer
@@ -110,7 +392,7 @@ function addBlendModes() {
   addBlendModeButtons();
 
   document.getElementById("background")?.addEventListener("click", () => {
-    view.map.basemap = map.basemap = Basemap.fromId("");
+    view.map.basemap = null as any;
     view.map.ground.surfaceColor = new Color("#d9ecff");
     hillshade.visible = false;
   })
@@ -129,7 +411,7 @@ function addBlendModes() {
 
 
 //***********************************
-//* Step 3: Effects and level of detail
+//* Step 4: Effects and level of detail
 //***********************************
 
 function levelOfDetail() {
@@ -151,81 +433,15 @@ function levelOfDetail() {
 
 //levelOfDetail()
 
-view.environment.weather = new SnowyWeather({ cloudCover: 0.2, precipitation: 0.3 })
+//view.environment.weather = new SnowyWeather({ cloudCover: 0.2, precipitation: 0.3 })
 
 
 //***********************************
-//* Step 4: Use terrain for analysis
-//***********************************
-let elevationProfile = new ElevationProfile({
-  view: view,
-  profiles: [
-    new ElevationProfileLineGround(),
-    new ElevationProfileLineInput()
-  ]
-});
-
-//addElevationProfileUI();
-
-
-
-//***********************************
-//* Step 5: Add more data
-//***********************************
-
-const railway = new FeatureLayer({
-  url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Zermatt_hiking_cable_rail/FeatureServer/0",
-});
-
-const cableCars = new FeatureLayer({
-  url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Zermatt_hiking_cable_rail/FeatureServer/2",
-});
-
-const slopes = new FeatureLayer({
-  url: "https://services2.arcgis.com/cFEFS0EWrhfDeVw9/arcgis/rest/services/Ski%20Slopes%20Zermatt/FeatureServer",
-});
-
-const hikingPaths = new FeatureLayer({
-  url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Zermatt_hiking_cable_rail/FeatureServer/1",
-});
-
-const rocks = new FeatureLayer({
-  url: "https://services2.arcgis.com/cFEFS0EWrhfDeVw9/arcgis/rest/services/Zermatt_Rocks/FeatureServer",
-});
-
-const buildings = new SceneLayer({
-  url: "https://services2.arcgis.com/cFEFS0EWrhfDeVw9/arcgis/rest/services/Buildings_Zermatt/SceneServer",
-});
-
-const roofs = new SceneLayer({
-  url: "https://services2.arcgis.com/cFEFS0EWrhfDeVw9/arcgis/rest/services/Building_Roofs_Zermatt/SceneServer",
-});
-
-const trees = new SceneLayer({
-  url: "https://services2.arcgis.com/cFEFS0EWrhfDeVw9/arcgis/rest/services/ZermattTreesFinal/SceneServer",
-});
-
-//addLayers()
-
-
-
-//***********************************
-//* Step 6: Finalize app
+//* Step 5: Finalize app
 //***********************************
 
 
 //finalizeApp()
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -253,6 +469,12 @@ const daylightExpand = new Expand({
   group: "top-right"
 });
 
+const elevationProfile = new ElevationProfile({ 
+  view: view,
+  profiles: [
+    new ElevationProfileLineGround(),
+    new ElevationProfileLineInput()
+  ] });
 const elevationProfileExpand = new Expand({
   view: view,
   content: elevationProfile,
@@ -336,7 +558,6 @@ view.when(() => {
   for (let i = 0; i < slopesList.length; i++) {
     var query = slopes.createQuery();
     query.where = "title = '" + slopesList[i] + "'"
-    console.log(query.where)
 
     slopes.queryFeatures(query).then((results) => {
       if (results.features.length > 0) {
@@ -467,255 +688,6 @@ function getHikingPathSymbol(patternStyle: any, color: [number, number, number])
 }
 
 
-function addLayers() {
-  railway.title = "Railway lines";
-  railway.legendEnabled = false;
-  railway.elevationInfo = {
-    mode: "on-the-ground"
-  };
-  railway.renderer = new SimpleRenderer({
-    symbol: new LineSymbol3D({
-      symbolLayers: [
-        new LineSymbol3DLayer({
-          material: { color: [30, 30, 30] },
-          size: "2.7px"
-        }),
-        new LineSymbol3DLayer({
-          material: { color: [240, 240, 240] },
-          size: "1.5px"
-        }),
-        new LineSymbol3DLayer({
-          pattern: new LineStylePattern3D({
-            style: "dash"
-          }),
-          material: { color: [30, 30, 30] },
-          size: "1.5px"
-        })
-      ]
-    })
-  })
-  map.add(railway);
-
-  cableCars.title = "Cable cars";
-  cableCars.legendEnabled = false;
-  cableCars.elevationInfo = {
-    mode: "absolute-height"
-  };
-  cableCars.renderer = new SimpleRenderer({
-    symbol: new LineSymbol3D({
-      symbolLayers: [
-        new PathSymbol3DLayer({
-          material: {
-            color: [77, 77, 77],
-          },
-          join: "bevel",
-          width: 5,
-          height: 5
-
-        }),
-        new LineSymbol3DLayer({
-          material: {
-            color: [77, 77, 77],
-          },
-          join: "bevel",
-          size: 3,
-        })]
-    })
-  })
-  map.add(cableCars);
-
-  slopes.title = "Ski Slopes";
-  slopes.elevationInfo = {
-    mode: "on-the-ground"
-  };
-  slopes.renderer = new UniqueValueRenderer({
-
-    field: "difficulty",
-    defaultLabel: "Other",
-    uniqueValueInfos: [
-      {
-        label: "Easy",
-        symbol: new LineSymbol3D({
-          symbolLayers: [
-            new LineSymbol3DLayer({
-              material: {
-                color: "#007ac2",
-              },
-              join: "bevel",
-              cap: "round",
-              size: 1.5
-            }),
-          ],
-        }),
-        value: "easy",
-      },
-      {
-        label: "Medium",
-        symbol: new LineSymbol3D({
-          symbolLayers: [
-            new LineSymbol3DLayer({
-              material: {
-                color: "#d90012",
-              },
-              join: "bevel",
-              cap: "round",
-              size: 1.5
-            }),
-          ],
-        }),
-        value: "medium",
-      },
-      {
-        label: "Difficult",
-        symbol: new LineSymbol3D({
-          symbolLayers: [
-            new LineSymbol3DLayer({
-              material: {
-                color: [0, 0, 0],
-              },
-              join: "bevel",
-              cap: "round",
-              size: 1.5
-            }),
-          ],
-        }),
-        value: "hard",
-      },
-    ],
-  })
-
-  map.add(slopes);
-
-
-  hikingPaths.title = "Hiking paths";
-  hikingPaths.visible = false;
-  hikingPaths.elevationInfo = {
-    mode: "on-the-ground"
-  };
-  hikingPaths.renderer = new UniqueValueRenderer({
-    field: "difficulty",
-    field2: "theme",
-    fieldDelimiter: ", ",
-    legendOptions: {
-      title: "Hiking paths"
-    },
-    uniqueValueInfos: [
-      {
-        value: "easy, ",
-        symbol: getHikingPathSymbol(
-          "solid",
-          [252, 194, 1]
-        )
-      },
-      {
-        value: "medium, ",
-        symbol: getHikingPathSymbol(
-          "dash",
-          [252, 194, 1]
-        )
-      },
-      {
-        value: "difficult, ",
-        symbol: getHikingPathSymbol(
-          "dot",
-          [252, 194, 1]
-        )
-      },
-      {
-        value: "easy, panoramic",
-        symbol: getHikingPathSymbol(
-          "solid",
-          [250, 59, 32]
-        )
-      },
-      {
-        value: "medium, panoramic",
-        symbol: getHikingPathSymbol(
-          "dash",
-          [250, 59, 32]
-        )
-      },
-      {
-        value: "difficult, panoramic",
-        symbol: getHikingPathSymbol(
-          "dot",
-          [250, 59, 32]
-        )
-      }
-    ]
-  })
-  map.add(hikingPaths);
-
-  rocks.title = "Rocks";
-  rocks.legendEnabled = false;
-  rocks.listMode = "hide";
-  rocks.elevationInfo = {
-    mode: "on-the-ground"
-  };
-  rocks.renderer = new SimpleRenderer({
-    symbol: new PolygonSymbol3D({
-      symbolLayers: [
-        new FillSymbol3DLayer({
-          material: {
-            color: [43, 43, 43, 0.36],
-            colorMixMode: "replace"
-          }
-        })]
-    })
-  })
-  map.add(rocks);
-
-
-  buildings.title = "Buildings";
-  buildings.legendEnabled = false;
-  buildings.listMode = "hide";
-  buildings.renderer = new SimpleRenderer({
-    symbol: new MeshSymbol3D({
-      symbolLayers: [
-        new FillSymbol3DLayer({
-          material: {
-            color: [194, 159, 99],
-            colorMixMode: "tint"
-          }
-        })]
-    })
-  })
-  map.add(buildings);
-
-
-  roofs.title = "Roofs";
-  roofs.legendEnabled = false;
-  roofs.listMode = "hide";
-  roofs.renderer = new SimpleRenderer({
-    symbol: new MeshSymbol3D({
-      symbolLayers: [
-        new FillSymbol3DLayer({
-          material: {
-            color: [115, 76, 0],
-            colorMixMode: "tint"
-          }
-        })]
-    })
-  })
-  map.add(roofs);
-
-  trees.title = "Trees";
-  trees.legendEnabled = false;
-  trees.visible = false;
-  trees.renderer = new SimpleRenderer({
-    symbol: new PointSymbol3D({
-      symbolLayers: [
-        new ObjectSymbol3DLayer({
-          resource: {
-            href: "https://static.arcgis.com/arcgis/styleItems/RealisticTrees/gltf/resource/LarixDecidua.glb"
-          },
-          height: 30
-        })]
-    })
-  })
-  map.add(trees);
-
-}
 
 function addRotateButton() {
   document.getElementById("rotateButton")?.addEventListener("click", () => {
@@ -740,6 +712,15 @@ function addBlendModeButtons() {
 
 function addlevelOfDetailButtons() {
 
+  view.camera = new Camera({
+    position: {
+      x:7.74658072,
+      y:46.01122505,
+      z:4054.18439
+  },
+    heading: 236.10,
+    tilt: 84.11
+  })
   // Remove basemap and set ground color
   //view.map.basemap = "none";
   view.map.basemap = map.basemap = Basemap.fromId("");
@@ -758,7 +739,19 @@ function addlevelOfDetailButtons() {
 
 }
 
-function addElevationProfileUI() {
+function finalizeApp() {
+
+  view.camera = new Camera(
+    {
+      position: {
+        longitude: 7.80103763,
+        latitude: 46.03375606,
+        z: 4264.89987
+      },
+      heading: 231.57,
+      tilt: 77.49
+    })
+
   view.qualityProfile = "high";
   view.environment.atmosphere!.quality = "high";
   view.environment.lighting!.directShadowsEnabled = true;
@@ -766,18 +759,18 @@ function addElevationProfileUI() {
   document.getElementById("qualityButtons")!.style.display = "none";
   view.ui.remove("qualityButtons");
 
-  view.ui.add(elevationProfile, "bottom-right");
-
-}
-
-function finalizeApp() {
   document.getElementById("container")!.style.display = "block";
   document.getElementById("viewDiv")!.style.width = "80%";
 
   view.ui.add([weatherExpand, daylightExpand], "top-right");
-  view.ui.remove(elevationProfile);
   view.ui.add(elevationProfileExpand, "bottom-right");
   view.ui.add(new Home({ view: view }), "top-left")
+
+  map.add(railway);
+  map.add(rocks);
+  map.add(buildings);
+  map.add(roofs);
+  map.add(trees);
 }
 
 window["view"] = view;
