@@ -401,7 +401,7 @@ view.ui.add([weatherExpand, daylightExpand], "top-right");
 
 const groundProfile = new ElevationProfileLineGround({});
 
-groundProfile.visible = false
+groundProfile.visible = false;
 
 const elevationProfile = new ElevationProfile({
   view: view,
@@ -448,9 +448,9 @@ showZermattBtn.addEventListener("click", showZermatt);
 view.ui.add(showZermattBtn, "bottom-left");
 
 
-let showSummerMapBtn = document.getElementById("showSummerMap") as HTMLCalciteButtonElement;
+let showHikesBtn = document.getElementById("showHikes") as HTMLCalciteButtonElement;
 
-const showSummerMap = async () => {
+const showHikes = async () => {
   cableCars.visible = true;
   railway.visible = true;
   hikingPaths.visible = true;
@@ -468,10 +468,17 @@ const showSummerMap = async () => {
     tilt: 48.84
   }))
 };
+showHikesBtn.addEventListener("click", showHikes);
+view.ui.add(showHikesBtn, "bottom-left");
 
-showSummerMapBtn.addEventListener("click", showSummerMap);
 
-view.ui.add(showSummerMapBtn, "bottom-left");
+const showSlopes = () => {
+  hikingPaths.visible = false;
+  slopes.visible = true;
+};
+let showSlopesBtn = document.getElementById("showSlopes") as HTMLCalciteButtonElement;
+showSlopesBtn.addEventListener("click", showSlopes);
+view.ui.add(showSlopesBtn, "bottom-left");
 
 
 const showWinterBasemap = async () => {
@@ -479,13 +486,13 @@ const showWinterBasemap = async () => {
   await showZermatt();
 
   hikingPaths.visible = false;
-  railway.visible = false;
+  // railway.visible = false;
 
   await reactiveUtils.whenOnce(() => !view.updating);
 
-  slopes.visible = false;
+  slopes.visible = true;
 
-  // rocks.visible = true;
+  rocks.visible = true;
   trees.visible = false;
   hillshade.visible = false;
 
@@ -506,11 +513,19 @@ let showBlendedBasemapBtn = document.getElementById("showBlendedBasemap") as HTM
 showBlendedBasemapBtn.addEventListener("click", showBlendedBasemap);
 view.ui.add(showBlendedBasemapBtn, "bottom-left");
 
-// elevationProfileExpand.watch("expanded", () => {
-//   if (elevationProfileExpand.expanded) {
-//     slopes.visible = true;
-//   }
-// });
+elevationProfileExpand.watch("expanded", () => {
+  if (elevationProfileExpand.expanded) {
+    view.goTo(new Camera({
+      position: {
+        x: 7.79194415,
+        y: 46.00819412,
+        z: 5665.72025,
+      },
+      heading: 246.82,
+      tilt: 71.72
+    }));
+  }
+});
 
 /***********************************
  * Functionality to change between summer and winter
@@ -602,7 +617,7 @@ view.when(() => {
     tilt: 20.43
   });
 
-  view.environment.weather = new CloudyWeather({ cloudCover: 0.5 });
+  view.environment.weather = new CloudyWeather({ cloudCover: 0.2 });
 
   slopes.visible = false;
   hikingPaths.visible = false;
