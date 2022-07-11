@@ -26,29 +26,13 @@ import SceneView from "@arcgis/core/views/SceneView";
 import Daylight from "@arcgis/core/widgets/Daylight";
 import ElevationProfile from "@arcgis/core/widgets/ElevationProfile";
 import ElevationProfileLineGround from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineGround";
+import ElevationProfileLineInput from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineInput";
 import Expand from "@arcgis/core/widgets/Expand";
 import Home from "@arcgis/core/widgets/Home";
 import Legend from "@arcgis/core/widgets/Legend";
 import Weather from "@arcgis/core/widgets/Weather";
 import "@esri/calcite-components/dist/calcite/calcite.css";
 import "@esri/calcite-components/dist/components/calcite-loader";
-
-// setAssetPath("https://js.arcgis.com/calcite-components/1.0.0-beta.77/assets");
-
-// const params = new URLSearchParams(document.location.search.slice(1));
-// const someParam = params.has("someParam");
-
-// IdentityManager.registerOAuthInfos([
-//   new OAuthInfo({
-//     appId: "",
-//     popup: true,
-//     popupCallbackUrl: `${document.location.origin}${document.location.pathname}oauth-callback-api.html`,
-//   }),
-// ]);
-
-// (window as any).setOAuthResponseHash = (responseHash: string) => {
-//   IdentityManager.setOAuthResponseHash(responseHash);
-// };
 
 /***********************************
  * Load and add all the layers
@@ -113,6 +97,13 @@ const cableCars = new FeatureLayer({
           width: 5,
           height: 5
 
+        }),
+        new LineSymbol3DLayer({
+          material: {
+            color: [77, 77, 77],
+          },
+          join: "bevel",
+          size: 3,
         })]
     })
   })
@@ -178,7 +169,7 @@ const slopes = new FeatureLayer({
             }),
           ],
         }),
-        value: "difficult",
+        value: "hard",
       },
     ],
   })
@@ -190,7 +181,7 @@ const hikingPaths = new FeatureLayer({
   title: "Hiking paths",
   visible: false,
   elevationInfo: {
-    mode: "on-the-ground",
+    mode: "on-the-ground"
   },
   renderer: new UniqueValueRenderer({
     field: "difficulty",
@@ -354,7 +345,7 @@ const view = new SceneView({
   qualityProfile: "high",
 
   environment: {
-    weather: { type: 'snowy', cloudCover: 0.14, precipitation: 0.3, snowCover: 'enabled' },
+    weather: { type: 'snowy', cloudCover: 0.14, precipitation: 0.3, snowCover: 'disabled' },
     atmosphere: {
       quality: "high"
     }
@@ -367,11 +358,12 @@ const view = new SceneView({
  ***********************************/
 
 // Remove basemap and set ground color
-//view.map.basemap = "none";
 view.map.basemap = map.basemap = Basemap.fromId("");
 view.map.ground.surfaceColor = new Color("#d9ecff");
+
 // Add hillshade layer on top
 view.map.layers.add(hillshade);
+
 // Blend the hillshade layer with the background
 hillshade.blendMode = "luminosity";
 
@@ -411,19 +403,18 @@ const elevationProfile = new ElevationProfile({
   ]
 });
 
-
-
 const elevationProfileExpand = new Expand({
   view: view,
   content: elevationProfile,
-  expanded: false
+  expanded: false,
+
 });
 
 view.ui.add(elevationProfileExpand, "top-right");
 view.ui.add(new Home({ view: view }), "top-left")
 
 
-let legend = new Legend({
+new Legend({
   view: view,
   container: "legend"
 });
@@ -530,7 +521,6 @@ elevationProfileExpand.watch("expanded", () => {
 /***********************************
  * Functionality to change between summer and winter
  ***********************************/
-
 let summer = document.getElementById("summer") as HTMLCalciteButtonElement;
 let winter = document.getElementById("winter") as HTMLCalciteButtonElement;
 let slopesContainer = document.getElementById("slopes") as HTMLCalciteButtonElement;
@@ -603,7 +593,7 @@ let highlight: any = null;
 let selectedSlope: string = "";
 
 view.when(() => {
-  loadSlopes();
+  // loadSlopes();
 
   // Initial configuration
 
@@ -627,69 +617,91 @@ view.when(() => {
 
   map.basemap = Basemap.fromId("satellite");
 
+
+  let slopesList = [
+    "Kuhbodmen",
+    "Gandegg",
+    "Weisse Perle",
+    "Matterhorn panorama",
+    "Furgg - Furi",
+  ];
+  let slopesNames = [
+    "Easy Rider",
+    "Glacier Run",
+    "Valley Slope",
+    "Matterhorn Panorama",
+
+    "Express Track",
+  ]
+
+  for (let i = 0; i < slopesList.length; i++) {
+    var query = slopes.createQuery();
+    query.where = "title = '" + slopesList[i] + "'"
+    console.log(query.where)
+
+    slopes.queryFeatures(query).then((results) => {
+      if (results.features.length > 0) {
+        let feature = results.features[0];
+
+        var div = document.createElement("calcite-button");
+        div.appearance = "outline";
+        div.id = feature.getObjectId().toString();
+        div.classList.add("slope");
+
+        switch (feature.attributes["difficulty"]) {
+          case "easy":
+            div.classList.add("blue");
+            break;
+          case "medium":
+            div.classList.add("red");
+            break;
+          case "hard":
+            div.classList.add("black");
+            break;
+        }
+        div.innerHTML = slopesNames[i];
+        slopesContainer?.appendChild(div);
+
+        div.addEventListener("click", () => {
+          view.goTo(feature.geometry).then(() => {
+            //view.popup.viewModel.features = [feature];
+            //view.popup.open();
+          });
+          (elevationProfile.profiles as any) = [
+            new ElevationProfileLineGround(),
+          ];
+          highlightSlope(feature);
+        });
+      }
+    })
+
+  }
 });
 
 view.on("click", function (event: any) {
   view.hitTest(event.screenPoint).then(function (response: any) {
     var res = response.results[0];
     // If there was an element clicked and also this element is either part of the traffic or public transport layers
-    if (res && (res.graphic.layer.title == "Ski Slopes" || res.graphic.layer.title == "Cable cars")) {
+    if (res && (res.graphic.layer.title == "Ski Slopes" || res.graphic.layer.title == "Hiking paths")) {
+      (elevationProfile.profiles as any) = [
+        new ElevationProfileLineGround(),
+      ];
       highlightSlope(res.graphic);
-    } else highlightSlope(null);
+    }
+    else if (res && (res.graphic.layer.title == "Cable cars")) {
+      (elevationProfile.profiles as any) = [
+        new ElevationProfileLineGround(),
+        new ElevationProfileLineInput()
+      ];
+      highlightSlope(res.graphic);
+    }
+    else highlightSlope(null);
   });
 });
 
 /***********************************
  * Helper functions
  ***********************************/
-
-function loadSlopes() {
-  let slopesContainer = document.getElementById("slopes");
-
-  // Create empty query, means to take all rows!
-  var query = slopes.createQuery();
-
-  slopes.queryFeatures(query).then((results) => {
-    if (results.features.length > 0) {
-      let features = results.features;
-
-      for (let i in features) {
-        if (["Furgg - Furi", "Kuhbodmen", "Weisse Perle", "Matterhorn panorama", "Plan Maison"].includes(features[i].attributes["title"])) {
-          var div = document.createElement("calcite-button");
-          div.appearance = "outline";
-          div.id = features[i].attributes["ObjectId"];
-          div.classList.add("slope");
-
-          switch (features[i].attributes["difficulty"]) {
-            case "beginner":
-              div.classList.add("green");
-              break;
-            case "easy":
-              div.classList.add("blue");
-              break;
-            case "medium":
-              div.classList.add("red");
-              break;
-            case "hard":
-              div.classList.add("black");
-              break;
-          }
-          div.innerHTML = features[i].attributes["title"];
-          slopesContainer?.appendChild(div);
-
-          div.addEventListener("click", () => {
-            view.goTo(features[i].geometry).then(() => {
-              //view.popup.viewModel.features = [features[i]];
-              //view.popup.open();
-            });
-            highlightSlope(features[i]);
-          });
-        }
-
-      }
-    }
-  });
-}
 
 function highlightSlope(graphic: Graphic | null) {
   if (graphic == null || (selectedSlope != "" && selectedSlope == graphic.attributes["ObjectId"])) {
@@ -722,7 +734,6 @@ function highlightSlope(graphic: Graphic | null) {
     if (document.getElementById(selectedSlope)) {
       (document.getElementById(selectedSlope) as HTMLCalciteButtonElement).appearance = "solid";
     }
-
   }
 }
 
