@@ -313,26 +313,7 @@ const view = new SceneView({
 
 
 //***********************************
-//* Step 1: Functionality to rotate
-//***********************************
-let rotating = false;
-function rotate() {
-  if (rotating && !view.interacting) {
-    view.goTo(
-      {
-        heading: view.camera.heading + 0.2,
-        center: view.center
-      },
-      { animate: false }
-    );
-    requestAnimationFrame(rotate);
-  }
-}
-
-//addRotateButton()
-
-//***********************************
-//* Step 2: Adding data
+//* Step 1: Adding data
 //***********************************
 
 const hikingPaths = new FeatureLayer({
@@ -369,12 +350,12 @@ const cableCars = new FeatureLayer({
 });
 map.add(cableCars);
 
-//cableCars.visible = true;
 //hikingPaths.visible = true;
-//slopes.visible = true;
+// cableCars.visible = true;
+// slopes.visible = true;
 
 //***********************************
-//* Step 3: Blend modes
+//* Step 2: Blend modes
 //***********************************
 
 // Load hillshade layer
@@ -407,11 +388,11 @@ function addBlendModes() {
 
 }
 
-//addBlendModes();
+// addBlendModes();
 
 
 //***********************************
-//* Step 4: Effects and level of detail
+//* Step 3: Effects and level of detail
 //***********************************
 
 function levelOfDetail() {
@@ -431,61 +412,45 @@ function levelOfDetail() {
   })
 }
 
-//levelOfDetail()
+// levelOfDetail()
 
-//view.environment.weather = new SnowyWeather({ cloudCover: 0.2, precipitation: 0.3 })
+// view.environment.weather = new SnowyWeather({ cloudCover: 0.5, precipitation: 0.3 })
 
 
 //***********************************
-//* Step 5: Finalize app
+//* Step 4: Finalize app
 //***********************************
 
 
-//finalizeApp()
-
-
-
-
+// finalizeApp()
 
 
 
 //***********************************
-//* Add the widgets' UI elements to the view
+//* Step 5: Functionality to rotate
 //***********************************
-const weatherExpand = new Expand({
-  view: view,
-  content: new Weather({
-    view: view
-  }),
-  group: "top-right"
-  //expanded: true
-});
+let rotating = false;
+function rotate() {
+  if (rotating && !view.interacting) {
+    view.goTo(
+      {
+        heading: view.camera.heading + 0.2,
+        center: view.center
+      },
+      { animate: false }
+    );
+    requestAnimationFrame(rotate);
+  }
+}
 
-const daylightExpand = new Expand({
-  view: view,
-  content: new Daylight({
-    view: view
-  }),
-  group: "top-right"
-});
-
-const elevationProfile = new ElevationProfile({ 
-  view: view,
-  profiles: [
-    new ElevationProfileLineGround(),
-    new ElevationProfileLineInput()
-  ] });
-const elevationProfileExpand = new Expand({
-  view: view,
-  content: elevationProfile,
-  expanded: false,
-});
+//addRotateButton()
 
 
-new Legend({
-  view: view,
-  container: "legend"
-});
+
+
+let elevationProfile: ElevationProfile;
+let elevationProfileExpand: Expand;
+view.ui.add(new Home({ view: view }), "top-left")
 
 
 //***********************************
@@ -711,15 +676,16 @@ function addBlendModeButtons() {
 
 
 function addlevelOfDetailButtons() {
+  map.add(buildings);
 
   view.camera = new Camera({
     position: {
-      x:7.74658072,
-      y:46.01122505,
-      z:4054.18439
-  },
-    heading: 236.10,
-    tilt: 84.11
+      x: 7.74662272,
+      y: 46.01522504,
+      z: 1713.63692
+    },
+    heading: 231.80,
+    tilt: 93.40
   })
   // Remove basemap and set ground color
   //view.map.basemap = "none";
@@ -741,6 +707,45 @@ function addlevelOfDetailButtons() {
 
 function finalizeApp() {
 
+
+  //***********************************
+  //* Add the widgets' UI elements to the view
+  //***********************************
+  const weatherExpand = new Expand({
+    view: view,
+    content: new Weather({
+      view: view
+    }),
+    group: "top-right"
+    //expanded: true
+  });
+
+  const daylightExpand = new Expand({
+    view: view,
+    content: new Daylight({
+      view: view
+    }),
+    group: "top-right"
+  });
+
+  elevationProfile = new ElevationProfile({
+    view: view,
+    profiles: [
+      new ElevationProfileLineGround(),
+      new ElevationProfileLineInput()
+    ]
+  });
+  elevationProfileExpand = new Expand({
+    view: view,
+    content: elevationProfile,
+    expanded: false,
+  });
+
+
+  new Legend({
+    view: view,
+    container: "legend"
+  });
   view.camera = new Camera(
     {
       position: {
@@ -764,11 +769,9 @@ function finalizeApp() {
 
   view.ui.add([weatherExpand, daylightExpand], "top-right");
   view.ui.add(elevationProfileExpand, "bottom-right");
-  view.ui.add(new Home({ view: view }), "top-left")
 
   map.add(railway);
   map.add(rocks);
-  map.add(buildings);
   map.add(roofs);
   map.add(trees);
 }
