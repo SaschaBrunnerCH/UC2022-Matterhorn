@@ -33,6 +33,11 @@ import Legend from "@arcgis/core/widgets/Legend";
 import ElevationProfileLineInput from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineInput";
 import ElevationProfileLineGround from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineGround";
 
+
+
+let elevationProfile: ElevationProfile;
+let elevationProfileExpand: Expand;
+
 let rendererCableCar = new SimpleRenderer({
   symbol: new LineSymbol3D({
     symbolLayers: [
@@ -292,7 +297,7 @@ const map = new Map({
   // Esri world satellite basemap
   basemap: "satellite",
   // Esri world elevation service
-  //ground: "world-elevation"
+  // ground: "world-elevation"
 });
 
 
@@ -309,6 +314,12 @@ const view = new SceneView({
       heading: 231.57,
       tilt: 77.49
     }),
+    qualityProfile: "high",
+    environment: {
+      atmosphere: {
+        quality: "high"
+      }
+    }
 });
 
 
@@ -350,7 +361,7 @@ const cableCars = new FeatureLayer({
 });
 map.add(cableCars);
 
-//hikingPaths.visible = true;
+// hikingPaths.visible = true;
 // cableCars.visible = true;
 // slopes.visible = true;
 
@@ -414,7 +425,7 @@ function levelOfDetail() {
 
 // levelOfDetail()
 
-// view.environment.weather = new SnowyWeather({ cloudCover: 0.5, precipitation: 0.3 })
+// view.environment.weather = new SnowyWeather({ cloudCover: 0.6, precipitation: 0.3 })
 
 
 //***********************************
@@ -448,8 +459,6 @@ function rotate() {
 
 
 
-let elevationProfile: ElevationProfile;
-let elevationProfileExpand: Expand;
 view.ui.add(new Home({ view: view }), "top-left")
 
 
@@ -703,10 +712,13 @@ function addlevelOfDetailButtons() {
   document.getElementById("qualityButtons")!.style.display = "block";
   view.ui.add("qualityButtons", "bottom-right");
 
+  view.qualityProfile = "low";
+  view.environment.atmosphere!.quality = "low";
+  view.environment.lighting!.directShadowsEnabled = false;
+
 }
 
 function finalizeApp() {
-
 
   //***********************************
   //* Add the widgets' UI elements to the view
