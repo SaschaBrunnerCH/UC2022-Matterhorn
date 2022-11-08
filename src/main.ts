@@ -403,27 +403,11 @@ function addBlendModes() {
 
 
 //***********************************
-//* Step 3: Effects and level of detail
+//* Step 3: Add Buildings
 //***********************************
 
-function levelOfDetail() {
-  addlevelOfDetailButtons();
 
-  document.getElementById("quality")?.addEventListener("click", () => {
-    view.qualityProfile = "high";
-    view.environment.atmosphere!.quality = "high";
-    view.environment.lighting!.directShadowsEnabled = true;
-  })
-
-  document.getElementById("performance")?.addEventListener("click", () => {
-    view.qualityProfile = "low";
-    view.environment.atmosphere!.quality = "low";
-    view.environment.lighting!.directShadowsEnabled = false;
-
-  })
-}
-
-// levelOfDetail()
+// addBuildings()
 
 // view.environment.weather = new SnowyWeather({ cloudCover: 0.6, precipitation: 0.3 })
 
@@ -684,7 +668,7 @@ function addBlendModeButtons() {
 }
 
 
-function addlevelOfDetailButtons() {
+function addBuildings() {
   map.add(buildings);
 
   view.camera = new Camera({
@@ -708,9 +692,6 @@ function addlevelOfDetailButtons() {
 
   document.getElementById("blendModeButtons")!.style.display = "none";
   view.ui.remove("blendModeButtons");
-
-  document.getElementById("qualityButtons")!.style.display = "block";
-  view.ui.add("qualityButtons", "bottom-right");
 
   view.qualityProfile = "low";
   view.environment.atmosphere!.quality = "low";
