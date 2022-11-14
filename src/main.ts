@@ -417,7 +417,7 @@ function addBlendModes() {
 
 // addBuildings()
 
-// view.environment.weather = new SnowyWeather({ cloudCover: 0.6, precipitation: 0.3 })
+// view.environment.weather = new SnowyWeather({ cloudCover: 0.6, precipitation: 0.3, snowCover: "enabled" })
 
 
 //***********************************
@@ -720,14 +720,6 @@ function finalizeApp() {
     group: "top-right"
     //expanded: true
   });
-
-  // const daylightExpand = new Expand({
-  //   view: view,
-  //   content: new Daylight({
-  //     view: view
-  //   }),
-  //   group: "top-right"
-  // });
 
   elevationProfile = new ElevationProfile({
     view: view,
