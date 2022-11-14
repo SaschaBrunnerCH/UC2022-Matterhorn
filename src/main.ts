@@ -1,37 +1,37 @@
+import Basemap from "@arcgis/core/Basemap";
+import Camera from "@arcgis/core/Camera";
 import Color from "@arcgis/core/Color";
-import SceneView from "@arcgis/core/views/SceneView";
-import Map from "@arcgis/core/Map";
-import "@esri/calcite-components/dist/calcite/calcite.css";
-import "@esri/calcite-components/dist/components/calcite-button";
-import Expand from "@arcgis/core/widgets/Expand";
-import Weather from "@arcgis/core/widgets/Weather";
-import Daylight from "@arcgis/core/widgets/Daylight";
-import ElevationProfile from "@arcgis/core/widgets/ElevationProfile";
-import TileLayer from "@arcgis/core/layers/TileLayer";
+import Graphic from "@arcgis/core/Graphic";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import SceneLayer from "@arcgis/core/layers/SceneLayer";
-import FillSymbol3DLayer from "@arcgis/core/symbols/FillSymbol3DLayer";
-import PolygonSymbol3D from "@arcgis/core/symbols/PolygonSymbol3D";
+import TileLayer from "@arcgis/core/layers/TileLayer";
+import Map from "@arcgis/core/Map";
 import SimpleRenderer from "@arcgis/core/renderers/SimpleRenderer";
-import MeshSymbol3D from "@arcgis/core/symbols/MeshSymbol3D";
-import ObjectSymbol3DLayer from "@arcgis/core/symbols/ObjectSymbol3DLayer";
-import PointSymbol3D from "@arcgis/core/symbols/PointSymbol3D";
 import UniqueValueRenderer from "@arcgis/core/renderers/UniqueValueRenderer";
+import FillSymbol3DLayer from "@arcgis/core/symbols/FillSymbol3DLayer";
 import LineSymbol3D from "@arcgis/core/symbols/LineSymbol3D";
 import LineSymbol3DLayer from "@arcgis/core/symbols/LineSymbol3DLayer";
-import Home from "@arcgis/core/widgets/Home";
-import Basemap from "@arcgis/core/Basemap";
+import MeshSymbol3D from "@arcgis/core/symbols/MeshSymbol3D";
+import ObjectSymbol3DLayer from "@arcgis/core/symbols/ObjectSymbol3DLayer";
 import PathSymbol3DLayer from "@arcgis/core/symbols/PathSymbol3DLayer";
-import LayerView from "@arcgis/core/views/layers/LayerView";
-import SnowyWeather from "@arcgis/core/views/3d/environment/SnowyWeather";
-import CloudyWeather from "@arcgis/core/views/3d/environment/CloudyWeather";
-import Graphic from "@arcgis/core/Graphic";
-import FeatureLayerView from "@arcgis/core/views/layers/FeatureLayerView";
-import Camera from "@arcgis/core/Camera";
 import LineStylePattern3D from "@arcgis/core/symbols/patterns/LineStylePattern3D";
-import Legend from "@arcgis/core/widgets/Legend";
-import ElevationProfileLineInput from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineInput";
+import PointSymbol3D from "@arcgis/core/symbols/PointSymbol3D";
+import PolygonSymbol3D from "@arcgis/core/symbols/PolygonSymbol3D";
+import CloudyWeather from "@arcgis/core/views/3d/environment/CloudyWeather";
+import SnowyWeather from "@arcgis/core/views/3d/environment/SnowyWeather";
+import FeatureLayerView from "@arcgis/core/views/layers/FeatureLayerView";
+import LayerView from "@arcgis/core/views/layers/LayerView";
+import SceneView from "@arcgis/core/views/SceneView";
+import Daylight from "@arcgis/core/widgets/Daylight";
+import ElevationProfile from "@arcgis/core/widgets/ElevationProfile";
 import ElevationProfileLineGround from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineGround";
+import ElevationProfileLineInput from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineInput";
+import Expand from "@arcgis/core/widgets/Expand";
+import Home from "@arcgis/core/widgets/Home";
+import Legend from "@arcgis/core/widgets/Legend";
+import Weather from "@arcgis/core/widgets/Weather";
+import "@esri/calcite-components/dist/calcite/calcite.css";
+import "@esri/calcite-components/dist/components/calcite-button";
 
 
 
@@ -314,12 +314,12 @@ const view = new SceneView({
       heading: 231.57,
       tilt: 77.49
     }),
-    qualityProfile: "high",
-    environment: {
-      atmosphere: {
-        quality: "high"
-      }
+  qualityProfile: "high",
+  environment: {
+    atmosphere: {
+      quality: "high"
     }
+  }
 });
 
 
@@ -382,6 +382,14 @@ view.map.layers.add(hillshade);
 
 function addBlendModes() {
   addBlendModeButtons();
+  const daylightExpand = new Expand({
+    view: view,
+    content: new Daylight({
+      view: view
+    }),
+    group: "top-right"
+  });
+  view.ui.add([daylightExpand], "top-right");
 
   document.getElementById("background")?.addEventListener("click", () => {
     view.map.basemap = null as any;
@@ -713,13 +721,13 @@ function finalizeApp() {
     //expanded: true
   });
 
-  const daylightExpand = new Expand({
-    view: view,
-    content: new Daylight({
-      view: view
-    }),
-    group: "top-right"
-  });
+  // const daylightExpand = new Expand({
+  //   view: view,
+  //   content: new Daylight({
+  //     view: view
+  //   }),
+  //   group: "top-right"
+  // });
 
   elevationProfile = new ElevationProfile({
     view: view,
@@ -760,7 +768,7 @@ function finalizeApp() {
   document.getElementById("container")!.style.display = "block";
   document.getElementById("viewDiv")!.style.width = "80%";
 
-  view.ui.add([weatherExpand, daylightExpand], "top-right");
+  view.ui.add([weatherExpand], "top-right");
   view.ui.add(elevationProfileExpand, "bottom-right");
 
   map.add(railway);
